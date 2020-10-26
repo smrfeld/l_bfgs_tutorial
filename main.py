@@ -1,6 +1,5 @@
 import logging
 from l_bfgs import L_BFGS
-from newton import Newton
 import plot
 from pathlib import Path
 
@@ -43,33 +42,23 @@ def get_random_uniform_in_range(x_rng : np.array, y_rng : np.array) -> np.array:
 
 if __name__ == "__main__":
 
-    #'''
     opt = L_BFGS(
         m=5,
         no_params=2,
         gradient_func=gradient
     )
-    #'''
-    '''
-    opt = Newton(
-        no_params=2,
-        gradient_func=gradient,
-        inv_hessian_func=inv_hessian,
-        lr=1
-    )
-    '''
     opt.log.setLevel(logging.INFO)
 
     x_rng = [-2,2]
     y_rng = [-1,1]
 
     # Noise
-    gradient_noise_mag = 1
+    gradient_noise_mag = 0.0
     
     fig_dir = "figures"
     Path(fig_dir).mkdir(parents=True, exist_ok=True)
     title_desc = "gradient noise magnitude: %f" % gradient_noise_mag
-    fname_ext = "%.2f" % gradient_noise_mag
+    fname_ext = "%.4f" % gradient_noise_mag
 
     trajs = {}
     for trial in range(0,100):
@@ -84,33 +73,18 @@ if __name__ == "__main__":
             bounds=np.array([x_rng,y_rng])
         )
 
-        # Reduce noise magnitude
-        '''
-        title_desc = "reduce noise"
-        fname_ext = "reduce_noise"
-        gradient_noise_mag = 0.1
-        converged, no_steps_to_convergence, final_update, traj = opt.run(
-            no_steps=25,
-            params_init=opt.params,
-            store_traj=True,
-            gradient_noise_mag=gradient_noise_mag,
-            tol=1e-8,
-            enforce_bounds=True,
-            bounds=np.array([x_rng,y_rng])
-        )
-        '''
-
         # if converged:
         trajs[trial] = traj
 
         opt.log.info("Trial: %d converged: %s no steps: %d final params: %s final update: %s" % (trial,converged,no_steps_to_convergence,opt.params,final_update))
-        # opt.log.info("Final update estimated: %s" % final_update)
-        # opt.log.info("Final update true: %s" % np.dot(hessian(opt.params),gradient(opt.params)))
 
     endpoints, counts = plot.get_endpoints_and_counts(trajs)
+    print("--- Endpoints ---")
     for i in range(0,len(endpoints)):
         print(endpoints[i], " : ", counts[i])
     
+    print(trajs[1])
+
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     # plot.plot_3d_endpoint_lines(ax, trajs)
@@ -136,6 +110,6 @@ if __name__ == "__main__":
     plt.title("Endpoints: " + title_desc)
     plt.savefig(fig_dir+"/histogram_%s.png" % fname_ext, dpi=200)
 
-    plt.show()
+    # plt.show()
 
 
